@@ -1,15 +1,19 @@
 name: Deploy to GitHub Pages
 
 on:
+  # 当推送到 main 分支时触发
   push:
     branches: ["main"]
+  # 允许你在 Actions 页面手动触发此工作流
   workflow_dispatch:
 
+# 设置权限，允许工作流部署到 GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 防止多个部署同时运行
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -20,19 +24,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # 如果是 yarn 或 pnpm，请修改
+          # 注意：这里去掉了 cache: 'npm'，因为你本地缺少 package-lock.json，保留会导致报错
+
       - name: Install dependencies
-        run: npm ci # 如果是 yarn 或 pnpm，请修改
+        # 注意：这里改成了 npm install。如果你用的是 yarn 或 pnpm，请改成 yarn install 或 pnpm install
+        run: npm install
+
       - name: Build
+        # 这里执行你项目里的打包命令
         run: npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # 如果你的打包目录不是 dist（比如 build），请改这里
+          # ⚠️⚠️⚠️ 极其重要：这里是你的打包输出目录！
+          # 如果你用的是 Vite / Vue CLI，通常是 './dist'
+          # 如果你用的是 Create React App，通常是 './build'
+          # 请根据你本地实际生成的文件夹名称修改这里！
+          path: './dist'
 
   deploy:
     environment:
